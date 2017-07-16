@@ -39,18 +39,20 @@ class TelderiParser
     {
         preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $html, $matches);
         $cookies = array();
+	    
         foreach($matches[1] as $item) {
             parse_str($item, $cookie);
             $cookies = array_merge($cookies, $cookie);
         }
         
-		return $cookies;
+	return $cookies;
     }
-public function authorize($email,$password)
-{        
+    public function authorize($email,$password)
+    {        
             $result = $this->getLoginPage();            
             $cookies = $this->parseCookies($result);            
             ch = curl_init("http://www.telderi.ru/ru/system/login"); 
+	    
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);                                    
             $token = $cookies["YII_CSRF_TOKEN"];         
             $fields = array(
@@ -60,7 +62,8 @@ public function authorize($email,$password)
                 "LoginForm[all_validate]" => true,
                 "LoginForm[verifyCode]"   => null,
                 "LoginForm[rememberMe]"   => 1
-            );                
+            );       
+	    
             $postData = $this->makePostString($fields);
             curl_setopt($ch, CURLOPT_POST, count($postData));
             curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36");
@@ -75,7 +78,8 @@ public function authorize($email,$password)
                 'Accept-Language: uk-UA,uk;q=0.8,ru;q=0.6,en-US;q=0.4,en;q=0.2',
                 'Cookie: YII_CSRF_TOKEN='.$token.'; _ym_visorc_21260713=w',
                 'Host: www.telderi.ru'
-            ));                
+            ));        
+	    
             $result = curl_exec($ch); 
             $this->_cookies = $this->parseCookies($result);
             if(count($this->_cookies) < 4)
@@ -83,13 +87,13 @@ public function authorize($email,$password)
                 throw new Exception('Wrong login or email');
             }
             $this->_token = $token;
-}
-public function addSite($options)
-{         
-        $ch = curl_init("http://www.telderi.ru/ru/default/addAuction");
+        }
+        public function addSite($options)
+	{         
+            $ch = curl_init("http://www.telderi.ru/ru/default/addAuction");
         
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 'Accept: application/json, text/javascript, */*; q=0.01',
                 'Origin: http://www.telderi.ru',
                 'Content-Type: application/x-www-form-urlencoded',
@@ -99,20 +103,14 @@ public function addSite($options)
                 'Host: www.telderi.ru',
                 'X-Requested-With: XMLHttpRequest'
             ));
-        $result = curl_exec($ch);
-        curl_close($ch);
-        $html   = str_get_html($result);
+            $result = curl_exec($ch);
+            curl_close($ch);
+            $html   = str_get_html($result);
         
+            $token = $html->find('#addforsell-form input[type="hidden"]',0)->value;
+            $site_addr = $options["site_url"];
         
-        
-        $token = $html->find('#addforsell-form input[type="hidden"]',0)->value;
-        
-        
-        
-        $site_addr = $options["site_url"];
-        
-        
-        $fields = array(
+            $fields = array(
                 "YII_CSRF_TOKEN"   => $token,
                 "auction_type"     => "website",
                 "ClassForValidationAddAuction[radio_b]" => "website",
@@ -121,20 +119,21 @@ public function addSite($options)
                 "ClassForValidationAddAuction[site_only]" => "",
                 "guaranteed"   => true,
                 "yt0"          => "Готово"
-        );  
-        $postData = $this->makePostString($fields);
+           );  
+		
+           $postData = $this->makePostString($fields);
          
-        $ch = curl_init("http://www.telderi.ru/ru/default/addAuction");
+           $ch = curl_init("http://www.telderi.ru/ru/default/addAuction");
 
-        $cookiesString = ($this->makeCookieString($this->_cookies).'; YII_CSRF_TOKEN='.$token);
+           $cookiesString = ($this->makeCookieString($this->_cookies).'; YII_CSRF_TOKEN='.$token);
          
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
-        curl_setopt($ch, CURLOPT_POST, count($postData));
-        curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36");
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_HEADER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+           curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); 
+           curl_setopt($ch, CURLOPT_POST, count($postData));
+           curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.84 Safari/537.36");
+           curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+           curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+           curl_setopt($ch, CURLOPT_HEADER, true);
+           curl_setopt($ch, CURLOPT_HTTPHEADER, array(
                 'Accept: application/json, text/javascript, */*; q=0.01',
                 'Origin: http://www.telderi.ru',
                 'Content-Type: application/x-www-form-urlencoded',
@@ -142,21 +141,19 @@ public function addSite($options)
                 'Accept-Language: uk-UA,uk;q=0.8,ru;q=0.6,en-US;q=0.4,en;q=0.2',
                 $cookiesString,
                 'Host: www.telderi.ru'
-        ));                
+           ));                
           
-        $result = curl_exec($ch);          
-        curl_close($ch);
-        
-        
-        
-       $html = str_get_html($result);
+           $result = curl_exec($ch);          
+           curl_close($ch);
+          
+           $html = str_get_html($result);
        
        
-       if($options["trafic"])
-       {
-           $traficLink = $html->find("div.edit_field a",1)->href;
-           $this->setTrafic($traficLink, $options["trafic"]);
-       }
+          if($options["trafic"])
+          {
+              $traficLink = $html->find("div.edit_field a",1)->href;
+              $this->setTrafic($traficLink, $options["trafic"]);
+          }
        if($options["header"])
        {
            $headerLink = $html->find("#field_title a",0)->href; 
@@ -262,6 +259,7 @@ private function setShowTo($link,$options)
                 'Host: www.telderi.ru',
                 'X-Requested-With: XMLHttpRequest'
         ));   
+	
     curl_setopt($ch, CURLOPT_HEADER, true);
     $result = curl_exec($ch);
     curl_close($ch);
